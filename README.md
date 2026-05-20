@@ -60,10 +60,13 @@ streamlit run app.py
 
 ![Quiz](screenshots/quiz.png)
 
-### AI Chatbot
-
-![Chatbot](screenshots/chatbot.png)
-
 ### Flashcards
 
-![Flashcards](screenshots/flashcards.png)
+![Flashcards](screenshots/flashcard1.png)
+![Flashcards](screenshots/flashcard2.png)
+
+### AI Chatbot
+
+![Chatbot](screenshots/chatbot1.png)
+![Chatbot](screenshots/chatbot2.png)
+![Chatbot](screenshots/chatbot3.png)
