@@ -49,3 +49,21 @@ streamlit run app.py
 - Online Deployment
 - AI Roadmap Generator
 - Better UI/UX
+
+## Screenshots
+
+### Home Page
+
+![Home](screenshots/home.png)
+
+### Quiz Section
+
+![Quiz](screenshots/quiz.png)
+
+### AI Chatbot
+
+![Chatbot](screenshots/chatbot.png)
+
+### Flashcards
+
+![Flashcards](screenshots/flashcards.png)
