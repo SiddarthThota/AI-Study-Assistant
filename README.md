@@ -62,11 +62,8 @@ streamlit run app.py
 
 ### Flashcards
 
-![Flashcards](screenshots/flashcard1.png)
-![Flashcards](screenshots/flashcard2.png)
+![Flashcards](screenshots/flashcard.png)
 
 ### AI Chatbot
 
-![Chatbot](screenshots/chatbot1.png)
-![Chatbot](screenshots/chatbot2.png)
-![Chatbot](screenshots/chatbot3.png)
+![Chatbot](screenshots/chatbot.png)
