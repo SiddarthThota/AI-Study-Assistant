@@ -118,6 +118,7 @@ if page == "Study Notes":
 
             st.session_state.notes = ""
             st.session_state.quiz = ""
+            st.session_state.flashcards = ""
 
             st.session_state.current_topic = topic
 
@@ -136,7 +137,7 @@ if page == "Study Notes":
                 with st.spinner("Generating Study Notes..."):
 
                     response = ollama.chat(
-                        model="tinyllama",
+                        model="llama3",
                         messages=[
                             {
                                 "role": "user",
@@ -230,7 +231,7 @@ if page == "Study Notes":
                 with st.spinner("Generating Quiz..."):
 
                     quiz_response = ollama.chat(
-                        model="tinyllama",
+                        model="llama3",
                         messages=[
                             {
                                 "role": "user",
@@ -249,39 +250,55 @@ if page == "Study Notes":
         # =================================
         # GENERATE FLASHCARDS
         # =================================
-        if st.button("Generate Flashcards"):
+        flash_prompt = f"""
+        You are an expert teacher.
 
-            flash_prompt = f"""
-            Create 5 flashcards for:
+        Create EXACTLY 5 flashcards about:
 
-            {st.session_state.current_topic}
+    {st.session_state.current_topic}
 
-            Format:
+    Return ONLY in this format:
 
-            Q:
-            A:
-            """
+    Q: Question 1
+    A: Answer 1
 
-            try:
+    Q: Question 2
+    A: Answer 2
 
-                with st.spinner("Generating Flashcards..."):
+    Q: Question 3
+    A: Answer 3
 
-                    flash_response = ollama.chat(
-                        model="tinyllama",
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": flash_prompt
-                            }
-                        ]
-                    )
+    Q: Question 4
+    A: Answer 4
 
-                    st.session_state.flashcards = flash_response["message"]["content"]
+    Q: Question 5
+    A: Answer 5
 
-                    st.success("Flashcards Generated!")
+    Rules:
+    - No introductions
+    - No explanations
+    - No markdown tables
+    - No bullet points
+    - No extra text
+"""
+        try:
+            with st.spinner("Generating Flashcards..."):
+                flash_response = ollama.chat(
+                    model="llama3",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": flash_prompt
+                        }
+                    ]
+                )
 
-            except Exception as e:
-                st.error(f"Flashcard Error: {e}")
+                st.session_state.flashcards = flash_response["message"]["content"]
+
+                st.success("Flashcards Generated!")
+
+        except Exception as e:
+            st.error(f"Flashcard Error: {e}")
 
         # =================================
         # NOTES HISTORY
@@ -366,7 +383,37 @@ elif page == "Flashcards":
 
     else:
 
-        st.write(st.session_state.flashcards)
+        lines = st.session_state.flashcards.split("\n")
+
+        question = ""
+        answer = ""
+        card_number = 1
+
+        for line in lines:
+
+            line = line.strip()
+
+            if line.startswith("Q:"):
+
+                question = line.replace("Q:", "").strip()
+
+            elif line.startswith("A:"):
+
+                answer = line.replace("A:", "").strip()
+
+                with st.expander(
+                    f"🃏 Flashcard {card_number}"
+                ):
+
+                    st.markdown(
+                        f"### ❓ Question\n\n{question}"
+                    )
+
+                    st.markdown(
+                        f"### ✅ Answer\n\n{answer}"
+                    )
+
+                card_number += 1
 
 # =========================================
 # AI CHATBOT PAGE
@@ -456,7 +503,7 @@ elif page == "AI Chatbot":
                 try:
 
                     response = ollama.chat(
-                        model="tinyllama",
+                        model="llama3",
                         messages=st.session_state.chat_history[-4:]
                     )
 
@@ -505,4 +552,4 @@ elif page == "AI Chatbot":
 # =========================================
 st.markdown("---")
 
-st.caption("🚀 Built with Streamlit + Ollama + TinyLlama")
+st.caption("🚀 Built with Streamlit + Ollama + llama3")
