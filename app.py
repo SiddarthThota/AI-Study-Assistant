@@ -20,35 +20,58 @@ st.markdown("""
 <style>
 
 .stApp {
-    background-color: #0E1117;
+    background: linear-gradient(
+        135deg,
+        #0f172a,
+        #1e293b
+    );
     color: white;
+}
+
+/* Sidebar */
+
+section[data-testid="stSidebar"] {
+    background: #111827;
+}
+
+/* Buttons */
+
+.stButton > button {
+    width: 100%;
+    border-radius: 12px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.stButton > button:hover {
+    background: #2563eb;
+    transform: scale(1.03);
+}
+
+/* Input Fields */
+
+.stTextInput input {
+    border-radius: 10px;
+}
+
+.stSelectbox {
+    border-radius: 10px;
+}
+
+/* Cards */
+
+.card {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    backdrop-filter: blur(10px);
 }
 
 h1, h2, h3 {
-    color: white;
-}
-
-.stButton>button {
-    background-color: #262730;
-    color: white;
-    border-radius: 10px;
-    height: 3em;
-    width: 100%;
-    font-size: 16px;
-}
-
-.stTextInput>div>div>input {
-    background-color: #262730;
-    color: white;
-}
-
-.stSelectbox>div>div {
-    background-color: #262730;
-    color: white;
-}
-
-.stTextArea textarea {
-    background-color: #262730;
     color: white;
 }
 
@@ -79,7 +102,11 @@ if "flashcards" not in st.session_state:
 # =========================================
 # SIDEBAR
 # =========================================
-st.sidebar.title("📚 Navigation")
+st.sidebar.markdown("""
+# 🚀 AI Study Assistant
+
+Your Personal Learning Companion
+""")
 
 page = st.sidebar.radio(
     "Go To",
@@ -96,7 +123,14 @@ page = st.sidebar.radio(
 # =========================================
 if page == "Study Notes":
 
-    st.title("📚 AI Personalized Study Assistant")
+    st.markdown("""
+    <div class="card">
+    <h1>📚 AI Personalized Study Assistant</h1>
+    <p>
+    Learn Smarter • Revise Faster • Stay Consistent
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     topic = st.text_input("Enter Topic")
 
@@ -163,7 +197,7 @@ if page == "Study Notes":
 
             except Exception as e:
                 st.error(f"Error: {e}")
-
+      
     # =====================================
     # DISPLAY NOTES
     # =====================================
@@ -172,6 +206,27 @@ if page == "Study Notes":
         st.subheader("📘 Study Notes")
 
         st.write(st.session_state.notes)
+
+        # ==========================
+        # DASHBOARD METRICS
+        # ==========================
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric(
+            "Notes Generated",
+            len(st.session_state.history)
+        )
+
+        col2.metric(
+            "Quiz Ready",
+            "Yes" if st.session_state.quiz else "No"
+        )
+
+        col3.metric(
+            "Flashcards",
+            "Ready" if st.session_state.flashcards else "No"
+        )
 
         # =================================
         # PDF DOWNLOAD
@@ -602,4 +657,15 @@ elif page == "AI Chatbot":
 # =========================================
 st.markdown("---")
 
-st.caption("🚀 Built with Streamlit + Ollama + llama3")
+st.markdown("---")
+
+st.markdown(
+    """
+    <center>
+    🚀 Built with Streamlit + Ollama + Llama3
+    <br>
+    AI Personalized Study Assistant v2.0
+    </center>
+    """,
+    unsafe_allow_html=True
+)
