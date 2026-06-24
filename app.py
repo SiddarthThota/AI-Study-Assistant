@@ -211,20 +211,70 @@ if page == "Study Notes":
         if st.button("Generate Quiz"):
 
             quiz_prompt = f"""
-            Create 3 MCQ quiz questions on:
+You are an expert teacher.
 
-            {st.session_state.current_topic}
+Create EXACTLY 5 multiple-choice questions about:
 
-            Format:
+{st.session_state.current_topic}
 
-            Question:
-            A)
-            B)
-            C)
-            D)
+Return ONLY in this format:
 
-            Correct Answer:
-            """
+Question 1:
+Question text
+
+A) Option A
+B) Option B
+C) Option C
+D) Option D
+
+Answer: A
+
+Question 2:
+Question text
+
+A) Option A
+B) Option B
+C) Option C
+D) Option D
+
+Answer: B
+
+Question 3:
+Question text
+
+A) Option A
+B) Option B
+C) Option C
+D) Option D
+
+Answer: C
+
+Question 4:
+Question text
+
+A) Option A
+B) Option B
+C) Option C
+D) Option D
+
+Answer: D
+
+Question 5:
+Question text
+
+A) Option A
+B) Option B
+C) Option C
+D) Option D
+
+Answer: A
+
+Rules:
+- No explanations
+- No markdown tables
+- No introductions
+- No extra text
+"""
 
             try:
 
