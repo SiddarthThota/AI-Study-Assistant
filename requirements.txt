@@ -1,5 +1,1 @@
-streamlit
-ollama
-fpdf
-SpeechRecognition
-pyaudio
+-r backend/requirements.txt

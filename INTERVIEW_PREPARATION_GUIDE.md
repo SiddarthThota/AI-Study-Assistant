@@ -1,4 +1,4 @@
-# AI Personalized Study Assistant - Interview Preparation Guide
+# StudyFlow AI - Interview Preparation Guide
 
 ---
 
@@ -6,7 +6,7 @@
 
 ### What is the AI Study Assistant?
 
-The **AI Personalized Study Assistant** is an interactive web-based application built with Streamlit that leverages AI (Ollama + TinyLlama) to help students learn more effectively. It's designed to create a personalized learning experience by generating study materials, quizzes, flashcards, and providing an AI-powered chatbot for doubt clarification.
+The **StudyFlow AI** app is an interactive web-based learning workspace built with Streamlit that leverages AI to help students learn more effectively. It creates a personalized learning experience by generating study materials, quizzes, flashcards, and an AI-powered tutor for doubt clarification.
 
 ### Core Purpose
 
