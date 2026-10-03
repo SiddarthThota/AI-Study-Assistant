@@ -153,12 +153,13 @@ def save_tutor_exchange(
     question: str,
     answer: str,
     conversation_id: str | None = None,
+    study_session_id: str | None = None,
 ) -> Dict[str, Any]:
     conversation = _select_one(user_id, token, "tutor_conversations", conversation_id) if conversation_id else None
     if conversation_id and conversation is None:
         raise ValueError("Tutor conversation was not found")
     if conversation is None:
-        conversation = _insert(user_id, token, "tutor_conversations", {"topic": topic})
+        conversation = _insert(user_id, token, "tutor_conversations", {"topic": topic, "study_session_id": study_session_id})
     _insert(user_id, token, "tutor_messages", {
         "conversation_id": conversation["id"], "role": "user", "content": question,
     })
@@ -191,17 +192,71 @@ def dashboard(user_id: str, token: str) -> Dict[str, Any]:
     activity = _select(user_id, token, "study_activity", 10)
     reviews = _select(user_id, token, "flashcard_reviews", 500)
     progress = _select(user_id, token, "study_progress", 1)
+    sessions = _select(user_id, token, "study_sessions", 1)
+    settings = get_study_settings(user_id, token)
+
     current_topic = notes[0]["topic"] if notes else "Start with a topic"
     progress_row = progress[0] if progress else {}
     recent_activity = [item["label"] for item in activity] or ["Create a study note to begin"]
     weak_concepts = ["Review recent quiz answers"] if attempts else ["No data yet"]
     completed = int(progress_row.get("notes_created", 0)) + int(progress_row.get("quiz_attempts", 0))
+
+    active_session = get_active_session(user_id, token)
+    has_active = active_session is not None
+    active_topic = active_session["topic"] if has_active else None
+    active_session_id = active_session["study_session_id"] if has_active else None
+
     return {
         "topic": current_topic,
         "progress": min(100, completed * 10 + min(len(reviews), 10) * 2),
         "next_action": "Review recent quiz answers" if attempts else "Generate notes or practice a quiz",
         "recent_activity": recent_activity,
         "weak_concepts": weak_concepts,
+        "has_active_session": has_active,
+        "active_topic": active_topic,
+        "active_session_id": active_session_id,
+        "study_goal": settings.get("study_goal", ""),
+    }
+
+
+def set_active_session(user_id: str, token: str, session_id: str) -> None:
+    if _select_one(user_id, token, "study_sessions", session_id) is None:
+        raise ValueError("Study session was not found")
+    _activity(user_id, token, "set_active", "Resumed study session", session_id)
+
+
+def get_active_session(user_id: str, token: str) -> Dict[str, Any] | None:
+    client = get_supabase_client(token)
+    activity = _execute(
+        client.table("study_activity")
+        .select("study_session_id")
+        .eq("user_id", user_id)
+        .in_("event_type", ["set_active", "note"])
+        .order("created_at", desc=True)
+        .limit(1),
+        "loaded"
+    )
+    if not activity or not activity[0].get("study_session_id"):
+        return None
+
+    session_id = activity[0]["study_session_id"]
+    session = _select_one(user_id, token, "study_sessions", session_id)
+    if not session:
+        return None
+
+    notes = _execute(client.table("study_notes").select("*").eq("study_session_id", session_id).order("created_at", desc=True).limit(1), "loaded")
+    quizzes = _execute(client.table("quizzes").select("*").eq("study_session_id", session_id).order("created_at", desc=True).limit(1), "loaded")
+    flashcards = _execute(client.table("flashcards").select("*").eq("study_session_id", session_id).order("created_at", desc=True).limit(1), "loaded")
+    tutor_convs = _execute(client.table("tutor_conversations").select("id").eq("study_session_id", session_id).order("created_at", desc=True).limit(1), "loaded")
+
+    return {
+        "study_session_id": session_id,
+        "topic": session["topic"],
+        "source_type": session.get("source_type", "topic"),
+        "notes": notes[0]["notes"] if notes else None,
+        "quiz": quizzes[0] if quizzes else None,
+        "flashcards": flashcards[0] if flashcards else None,
+        "tutor_conversation_id": tutor_convs[0]["id"] if tutor_convs else None,
     }
 
 

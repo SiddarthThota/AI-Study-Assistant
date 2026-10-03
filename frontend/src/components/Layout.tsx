@@ -14,6 +14,8 @@ const navItems = [
 export function Layout() {
   const navigate = useNavigate();
   const email = sessionStorage.getItem('studyflow-user-email') ?? '';
+  const name = sessionStorage.getItem('studyflow-user-name') ?? 'Student';
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'ST';
 
   const handleSignOut = async () => {
     const refreshToken = sessionStorage.getItem('studyflow-refresh-token');
@@ -50,9 +52,17 @@ export function Layout() {
           ))}
         </nav>
 
-        <div className="sidebar-card">
-          <span className="eyebrow">Signed in</span>
-          <strong>{email}</strong>
+        <div className="sidebar-card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px' }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#e2e8f0', color: '#334155',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0
+          }}>
+            {initials}
+          </div>
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontWeight: '600', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+            <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
+          </div>
         </div>
 
         <button className="secondary-button" type="button" onClick={handleSignOut}>

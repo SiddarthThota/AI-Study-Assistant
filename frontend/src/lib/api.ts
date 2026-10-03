@@ -22,6 +22,7 @@ export function setAuthSession(session: AuthSession): void {
     sessionStorage.setItem(ACCESS_TOKEN_KEY, session.access_token);
     sessionStorage.setItem(REFRESH_TOKEN_KEY, session.refresh_token);
     sessionStorage.setItem('studyflow-user-email', session.email);
+    sessionStorage.setItem('studyflow-user-name', session.name || 'Student');
   }
 }
 
@@ -29,6 +30,7 @@ export function clearAuthSession(): void {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   sessionStorage.removeItem(REFRESH_TOKEN_KEY);
   sessionStorage.removeItem('studyflow-user-email');
+  sessionStorage.removeItem('studyflow-user-name');
   sessionStorage.removeItem('studyflow-user-id');
 }
 

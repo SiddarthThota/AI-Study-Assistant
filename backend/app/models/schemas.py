@@ -21,6 +21,11 @@ class AuthCredentials(BaseModel):
     password: str = Field(..., min_length=6)
 
 
+class SignUpCredentials(AuthCredentials):
+    first_name: str = Field(..., min_length=1)
+    last_name: str = Field(..., min_length=1)
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str = Field(..., min_length=1)
 
@@ -112,6 +117,7 @@ class TutorRequest(BaseModel):
     notes: str = ""
     pdf_context: str = ""
     conversation_id: str | None = None
+    study_session_id: str | None = None
     chat_history: List[TutorMessage] = []
 
 
@@ -128,6 +134,10 @@ class DashboardSummary(BaseModel):
     next_action: str
     recent_activity: List[str]
     weak_concepts: List[str]
+    has_active_session: bool = False
+    active_topic: str | None = None
+    active_session_id: str | None = None
+    study_goal: str = ""
 
 
 class StudySettingsRequest(BaseModel):

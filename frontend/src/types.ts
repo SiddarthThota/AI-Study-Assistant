@@ -15,6 +15,10 @@ export type DashboardSummary = {
   next_action: string;
   recent_activity: string[];
   weak_concepts: string[];
+  has_active_session: boolean;
+  active_topic: string | null;
+  active_session_id: string | null;
+  study_goal: string;
 };
 
 export type NotesResponse = {

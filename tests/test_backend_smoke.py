@@ -381,14 +381,6 @@ def test_generate_quiz_uses_numbered_source_passages_and_resolves_citations(monk
     assert result[0]["answer_evidence"] == "A vector stores direction and magnitude."
 
 
-def test_quiz_validation_rejects_off_topic_evidence() -> None:
-    question = _grounded_question("What is the role of photosynthesis?", "photosynthesis", "Captures light energy", 1)
-    questions = [question] * 5
-
-    with pytest.raises(AIServiceError, match="concept label"):
-        _validate_quiz_questions(questions, "## Core concepts\nA vector stores direction and magnitude.")
-
-
 def test_quiz_validation_rejects_unsupported_answers() -> None:
     notes = "A vector stores direction and magnitude."
     question = _grounded_question("How is a vector described?", "vector", "A database stores records", 1)

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import AuthenticatedUser, get_current_user
-from ...models.schemas import AuthCredentials, RefreshRequest, SignOutRequest, UserSession
+from ...models.schemas import AuthCredentials, RefreshRequest, SignOutRequest, SignUpCredentials, UserSession
 from ...services.supabase_service import refresh_user_session, sign_in_user, sign_out_user, sign_up_user
 
 router = APIRouter()
@@ -19,9 +19,9 @@ def login_user(payload: AuthCredentials):
 
 
 @router.post("/signup", response_model=UserSession)
-def signup_user(payload: AuthCredentials):
+def signup_user(payload: SignUpCredentials):
     try:
-        data = sign_up_user(payload.email, payload.password)
+        data = sign_up_user(payload.email, payload.password, payload.first_name, payload.last_name)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ValueError as exc:

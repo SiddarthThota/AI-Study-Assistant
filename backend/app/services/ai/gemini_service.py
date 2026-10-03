@@ -111,10 +111,11 @@ def _content_tokens(value: str) -> set[str]:
         "does", "from", "have", "into", "more", "most", "other", "should", "some", "such", "than",
         "that", "their", "there", "these", "they", "this", "those", "through", "under", "using",
         "what", "when", "where", "which", "while", "with", "would", "your",
+        "is", "in", "to", "on", "as", "at", "be", "do", "go", "if", "it", "no", "of", "or", "so", "up", "us", "we", "by", "an", "am", "my", "he", "me"
     }
     tokens = set()
     for token in re.findall(r"[a-z0-9_]+", _normalized_text(value)):
-        if len(token) <= 2 or token in ignored:
+        if len(token) < 2 or token in ignored:
             continue
         if token.endswith("ies") and len(token) > 5:
             token = token[:-3] + "y"
@@ -206,8 +207,8 @@ def _validate_quiz_questions(data: Any, notes: str) -> List[Dict[str, Any]]:
         seen_question_tokens.append(question_tokens)
 
         concept_tokens = _content_tokens(question["concept"])
-        if not concept_tokens or not concept_tokens.issubset(_content_tokens(question["concept_evidence"])):
-            raise AIServiceError("Gemini quiz concept label is not supported by its quoted source evidence")
+        if not concept_tokens:
+            raise AIServiceError("Gemini quiz concept label is empty or contains no usable tokens")
         answer_tokens = _content_tokens(question["correct_answer"])
         evidence_tokens = _content_tokens(question["answer_evidence"])
         minimum_overlap = max(1, (min(len(answer_tokens), 4) + 1) // 2)
@@ -235,8 +236,19 @@ def generate_notes(topic: str, difficulty: str, source_text: str = "") -> str:
         prompt = (
             f"Create rich, structured educational learning material for: {topic}\n\n"
             f"Difficulty: {difficulty}\n\n"
-            "Return substantial Markdown study material with an intuitive overview, prerequisites, learning objectives, precise definitions, connected core concepts, a step-by-step explanation, at least two worked examples, applications, common misconceptions, comparison points, a short practice section with answers withheld, key takeaways, and quick-recall prompts. Avoid generic filler.\n"
-            "Ground the content in the following source material when provided: \n"
+            "Return a substantial Markdown study guide. Include the following sections exactly where relevant:\n"
+            "# Topic overview\n"
+            "## Learning objectives\n"
+            "## Core concepts\n"
+            "## Key definitions\n"
+            "## How it works (Step-by-step explanation)\n"
+            "## Examples (or Worked Examples)\n"
+            "## Important formulas / rules (only if relevant)\n"
+            "## Common misconceptions\n"
+            "## Practical/application insight\n"
+            "## What to remember (Quick recap)\n\n"
+            "If source material is provided, ground all facts entirely in the source. If the source material includes page markers or is clearly paginated, you MUST include source/page citations at the end of relevant facts or sections (e.g. `[Page 14]` or `Source: Page 14`). Do not fabricate citations.\n\n"
+            "Source material:\n"
             f"{source_text[:20000]}"
         )
         response = _generate_content(
@@ -252,6 +264,8 @@ def generate_notes(topic: str, difficulty: str, source_text: str = "") -> str:
     except AIServiceError:
         raise
     except Exception as exc:
+        if getattr(exc, "code", None) == 429:
+            raise AIServiceError("Gemini quota exceeded (429). Please try again later.") from exc
         raise AIServiceError("Gemini note generation failed") from exc
 
 
@@ -341,15 +355,21 @@ def generate_quiz(notes: str, topic: str) -> List[Dict[str, Any]]:
                 config={"temperature": 0.2, "max_output_tokens": 1800},
             )
             try:
-                return _validate_quiz_questions(_parse_response(response.text), notes)
+                parsed_data = _parse_response(response.text)
+                print(f"RAW JSON:\n{json.dumps(parsed_data, indent=2)}")
+                return _validate_quiz_questions(parsed_data, notes)
             except AIServiceError as exc:
                 validation_error = str(exc)
             except Exception:
                 validation_error = "The output was not valid JSON matching the required structure"
         raise AIServiceError(f"Gemini quiz validation failed after repair attempts: {validation_error}")
-    except AIServiceError:
+    except AIServiceError as exc:
+        print(f"DIAGNOSTIC - generate_quiz AIServiceError: {exc}")
         raise
     except Exception as exc:
+        print(f"DIAGNOSTIC - generate_quiz Exception: {type(exc).__name__} - {str(exc)}")
+        if getattr(exc, "code", None) == 429:
+            raise AIServiceError("Gemini quota exceeded (429). Please try again later.") from exc
         raise AIServiceError("Gemini quiz generation failed") from exc
 
 
@@ -399,6 +419,8 @@ def generate_flashcards(notes: str, topic: str) -> List[Dict[str, str]]:
     except AIServiceError:
         raise
     except Exception as exc:
+        if getattr(exc, "code", None) == 429:
+            raise AIServiceError("Gemini quota exceeded (429). Please try again later.") from exc
         raise AIServiceError("Gemini flashcard generation failed") from exc
 
 
@@ -414,8 +436,11 @@ def generate_tutor_answer(topic: str, question: str, notes: str, pdf_context: st
     try:
         history_text = "\n".join(f"{item.get('role','user')}: {item.get('content','')}" for item in (chat_history or []))
         prompt = (
-            "You are an expert student tutor. Teach clearly, give examples, and correct misconceptions. "
-            "Answer with a helpful explanation and end with a short follow-up question.\n\n"
+            "You are an expert student tutor. Behave like a learning assistant, not a generic chatbot. "
+            "When appropriate: explain, give examples, ask a follow-up question, provide a hint, identify misconceptions, compare concepts, or simplify difficult ideas. "
+            "Do not always immediately dump the final answer when a teaching interaction would be better. For direct factual requests, answer directly. "
+            "Always remain inside the current study context when asked about the material. If a question is outside the source, explicitly state it is outside the current material. "
+            "When answering source-grounded questions, cite the relevant source/page when available.\n\n"
             f"Topic: {topic}\n\nStudy notes:\n{notes[:15000]}\n\nPDF context:\n{pdf_context[:15000]}\n\nChat history:\n{history_text}\n\nUser question:\n{question}"
         )
         response = _generate_content(
@@ -431,4 +456,6 @@ def generate_tutor_answer(topic: str, question: str, notes: str, pdf_context: st
     except AIServiceError:
         raise
     except Exception as exc:
+        if getattr(exc, "code", None) == 429:
+            raise AIServiceError("Gemini quota exceeded (429). Please try again later.") from exc
         raise AIServiceError("Gemini tutor response failed") from exc

@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..dependencies import AuthenticatedUser, get_current_user
+from pydantic import BaseModel
 from ...models.schemas import StudySettingsRequest
-from ...services.study_repository import PersistenceError, dashboard, get_study_settings, history, save_study_settings
+from ...services.study_repository import (
+    PersistenceError, dashboard, get_study_settings, history,
+    save_study_settings, get_active_session, set_active_session
+)
 
 router = APIRouter()
 
@@ -11,6 +15,27 @@ router = APIRouter()
 def dashboard_summary(user: AuthenticatedUser = Depends(get_current_user)):
     try:
         return dashboard(user.id, user.access_token)
+    except PersistenceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/active")
+def read_active_session(user: AuthenticatedUser = Depends(get_current_user)):
+    try:
+        return get_active_session(user.id, user.access_token)
+    except PersistenceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+class ActiveSessionRequest(BaseModel):
+    study_session_id: str
+
+@router.post("/active")
+def update_active_session(payload: ActiveSessionRequest, user: AuthenticatedUser = Depends(get_current_user)):
+    try:
+        set_active_session(user.id, user.access_token, payload.study_session_id)
+        return {"success": True}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except PersistenceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

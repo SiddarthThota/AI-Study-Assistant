@@ -33,6 +33,7 @@ def chat(payload: TutorRequest, user: AuthenticatedUser = Depends(get_current_us
             payload.question,
             answer,
             payload.conversation_id,
+            payload.study_session_id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

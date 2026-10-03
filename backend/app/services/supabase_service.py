@@ -58,10 +58,21 @@ def sign_in_user(email: str, password: str) -> Dict[str, Any]:
         raise ValueError("Invalid email or password") from exc
 
 
-def sign_up_user(email: str, password: str) -> Dict[str, Any]:
+def sign_up_user(email: str, password: str, first_name: str = "", last_name: str = "") -> Dict[str, Any]:
     client = get_supabase_client()
     try:
-        response = client.auth.sign_up({"email": email, "password": password})
+        full_name = f"{first_name} {last_name}".strip()
+        response = client.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "full_name": full_name
+                }
+            }
+        })
         return _session_data(response)
     except Exception as exc:
         raise ValueError("Unable to create account") from exc
